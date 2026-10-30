@@ -1,0 +1,200 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model NewsSource {
+  id                 String          @id @default(cuid())
+  slug               String          @unique
+  name               String
+  websiteUrl         String
+  feedUrl            String?
+  scope              NewsScope       @default(GLOBAL)
+  sourceKind         SourceKind      @default(EDITORIAL)
+  verificationStatus String          @default("EXISTING")
+  collectionNotes    String?
+  verifiedAt         DateTime?       @db.Timestamptz(3)
+  adapter            String          @default("rss")
+  color              String
+  enabled            Boolean         @default(true)
+  allowExcerpts      Boolean         @default(false)
+  allowImages        Boolean         @default(false)
+  minPollMinutes     Int             @default(10)
+  etag               String?
+  lastModified       String?
+  lastAttemptAt      DateTime?       @db.Timestamptz(3)
+  lastSuccessAt      DateTime?       @db.Timestamptz(3)
+  lastError          String?
+  nextPollAt         DateTime?       @db.Timestamptz(3)
+  articles           Article[]
+  logs               CollectionLog[]
+
+  @@index([scope, enabled])
+}
+
+model Article {
+  id                       String               @id @default(cuid())
+  externalId               String
+  title                    String
+  searchText               String               @default("")
+  description              String?
+  originalUrl              String
+  canonicalUrl             String
+  imageUrl                 String?
+  author                   String?
+  publisherName            String?
+  publishedAt              DateTime             @db.Timestamptz(3)
+  fetchedAt                DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt                DateTime             @updatedAt @db.Timestamptz(3)
+  sourceId                 String
+  source                   NewsSource           @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  language                 String?
+  region                   String?
+  countryCodes             String[]             @default([])
+  technologyRelevanceScore Int                  @default(0)
+  bangladeshRelevanceScore Int                  @default(0)
+  classificationStatus     ClassificationStatus @default(NEEDS_REVIEW)
+  classificationReason     String               @default("Not assessed for Bangladesh")
+  classifiedAt             DateTime?            @db.Timestamptz(3)
+  classifierVersion        String?
+  classificationLocked     Boolean              @default(false)
+  reviewedAt               DateTime?            @db.Timestamptz(3)
+  contentKind              ContentKind          @default(REPORTING)
+  bangladeshTrendingScore  Float                @default(0)
+  trendingScore            Float                @default(0)
+  hnScore                  Int?
+  storyClusterId           String
+  storyCluster             StoryCluster         @relation(fields: [storyClusterId], references: [id])
+  categories               ArticleCategory[]
+  tags                     ArticleTag[]
+
+  @@unique([sourceId, externalId])
+  @@unique([sourceId, canonicalUrl])
+  @@index([publishedAt(sort: Desc), id])
+  @@index([trendingScore(sort: Desc), publishedAt(sort: Desc), id])
+  @@index([sourceId, publishedAt(sort: Desc)])
+  @@index([language, region])
+  @@index([storyClusterId])
+  @@index([countryCodes], type: Gin)
+  @@index([classificationStatus, publishedAt(sort: Desc)])
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "Article_title_trgm_idx")
+  @@index([description(ops: raw("gin_trgm_ops"))], type: Gin, map: "Article_description_trgm_idx")
+  @@index([searchText(ops: raw("gin_trgm_ops"))], type: Gin, map: "Article_searchText_trgm_idx")
+}
+
+model Category {
+  id        String            @id @default(cuid())
+  slug      String            @unique
+  name      String
+  shortName String
+  scope     NewsScope         @default(GLOBAL)
+  articles  ArticleCategory[]
+}
+
+model ArticleCategory {
+  articleId  String
+  categoryId String
+  article    Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, categoryId])
+  @@index([categoryId, articleId])
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique
+  articles ArticleTag[]
+
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin, map: "Tag_name_trgm_idx")
+}
+
+model ArticleTag {
+  articleId String
+  tagId     String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([tagId])
+}
+
+model StoryCluster {
+  id          String    @id @default(cuid())
+  fingerprint String    @unique
+  title       String
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  articles    Article[]
+
+  @@index([createdAt])
+}
+
+model CollectionJob {
+  id          String          @id @default(cuid())
+  startedAt   DateTime        @default(now()) @db.Timestamptz(3)
+  heartbeatAt DateTime        @default(now()) @db.Timestamptz(3)
+  finishedAt  DateTime?       @db.Timestamptz(3)
+  status      String          @default("running")
+  error       String?
+  logs        CollectionLog[]
+
+  @@index([startedAt(sort: Desc)])
+}
+
+model CollectionLog {
+  id               String        @id @default(cuid())
+  jobId            String
+  sourceId         String
+  job              CollectionJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  source           NewsSource    @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  startedAt        DateTime      @default(now()) @db.Timestamptz(3)
+  finishedAt       DateTime?     @db.Timestamptz(3)
+  status           String
+  received         Int           @default(0)
+  inserted         Int           @default(0)
+  updated          Int           @default(0)
+  rejected         Int           @default(0)
+  regionalAccepted Int           @default(0)
+  regionalRejected Int           @default(0)
+  regionalReview   Int           @default(0)
+  durationMs       Int           @default(0)
+  message          String?
+
+  @@index([sourceId, startedAt(sort: Desc)])
+}
+
+model WorkerLease {
+  id        String   @id
+  owner     String
+  expiresAt DateTime @db.Timestamptz(3)
+}
+
+enum NewsScope {
+  GLOBAL
+  BANGLADESH
+}
+
+enum SourceKind {
+  EDITORIAL
+  OFFICIAL
+  COMPANY
+  AGGREGATOR
+}
+
+enum ClassificationStatus {
+  ACCEPTED
+  REJECTED
+  NEEDS_REVIEW
+}
+
+enum ContentKind {
+  REPORTING
+  OFFICIAL_ANNOUNCEMENT
+  PRESS_RELEASE
+  SPONSORED
+  BRANDED_CONTENT
+}

@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.aws
+.codex
+.agents
+.openai
+.env
+.env.*.local
+.local
+test-results
+coverage
+*.log

@@ -1,0 +1,41 @@
+databases:
+  - name: techpulse-db
+    plan: basic-256mb
+    databaseName: techpulse
+    user: techpulse
+services:
+  - type: web
+    name: techpulse-api
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    preDeployCommand: npm run db:migrate
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: techpulse-db, property: connectionString }
+      - key: SERVE_WEB
+        value: "true"
+      - key: WEB_ORIGIN
+        sync: false
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+      - key: WORKER_STALE_MINUTES
+        value: "30"
+  - type: worker
+    name: techpulse-collector
+    runtime: docker
+    plan: starter
+    dockerCommand: node apps/worker/dist/index.js
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: techpulse-db, property: connectionString }
+      - key: COLLECTION_CRON
+        value: "*/10 * * * *"
+      - key: WORKER_STALE_MINUTES
+        value: "30"
+      - key: GNEWS_API_KEY
+        sync: false
+      - key: GNEWS_BD_LANGUAGE
+        value: en
+      - key: GNEWS_DAILY_REQUEST_LIMIT
+        value: "24"

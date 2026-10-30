@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd ../.. && npm run build -w @techpulse/web",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/((?!assets/|favicon.svg).*)", "destination": "/index.html" }
+  ]
+}

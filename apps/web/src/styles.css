@@ -1,0 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+@import "./styles/tokens.css";
+@import "./styles/base.css";
+@import "./styles/navigation.css";
+@import "./styles/cards.css";
+@import "./styles/feeds.css";
+@import "./styles/bangladesh.css";
+@import "./styles/search.css";

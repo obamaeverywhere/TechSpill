@@ -1,0 +1,71 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: techpulse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your shell or .env}
+      POSTGRES_DB: techpulse
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U techpulse -d techpulse]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  migrate:
+    build: .
+    command: ["npm", "run", "db:migrate"]
+    environment:
+      DATABASE_URL: postgresql://techpulse:${POSTGRES_PASSWORD}@db:5432/techpulse?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://techpulse:${POSTGRES_PASSWORD}@db:5432/techpulse?schema=public
+      PORT: 4000
+      SERVE_WEB: "true"
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:4000}
+      WORKER_STALE_MINUTES: 30
+    ports:
+      - "4000:4000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:4000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  worker:
+    build: .
+    restart: unless-stopped
+    command: [node, apps/worker/dist/index.js]
+    environment:
+      DATABASE_URL: postgresql://techpulse:${POSTGRES_PASSWORD}@db:5432/techpulse?schema=public
+      COLLECTION_CRON: ${COLLECTION_CRON:-*/10 * * * *}
+      COLLECTION_CONCURRENCY: 3
+      GNEWS_API_KEY: ${GNEWS_API_KEY:-}
+      GNEWS_BD_LANGUAGE: ${GNEWS_BD_LANGUAGE:-en}
+      GNEWS_DAILY_REQUEST_LIMIT: ${GNEWS_DAILY_REQUEST_LIMIT:-24}
+      WORKER_STALE_MINUTES: 30
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: [CMD, node, scripts/check-worker.mjs]
+      interval: 60s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
+volumes:
+  postgres_data:
