@@ -48,7 +48,7 @@ If a provider assigns `PORT`, Express respects it. Use a pooled, TLS-protected d
 
 ## Vercel Services (one project)
 
-The root `vercel.json` configures the Vite `web` service, Express `api` service, and a private `worker` daemon. See [VERCEL.md](VERCEL.md) for the exact topology, same-origin routing, runtime environment, managed database/migration requirements, and local verification. The static frontend does not need a runtime service binding; the browser calls the public `/api` path. The worker accesses PostgreSQL directly.
+`apps/vercel.json` configures the Vite `web` service, Express `api` service, and a private `worker` daemon. See [VERCEL.md](VERCEL.md) for the exact topology, same-origin routing, runtime environment, managed database/migration requirements, and local verification. The static frontend does not need a runtime service binding; the browser calls the public `/api` path. The worker accesses PostgreSQL directly.
 
 ## Alternative: frontend-only Vercel project
 

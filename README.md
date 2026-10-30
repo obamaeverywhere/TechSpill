@@ -207,7 +207,7 @@ Vite variables are build-time values. Configure them before building, then rebui
 
 ## Production deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for Docker Compose, Render/Railway, Vercel, migrations, monitoring, and recovery. [VERCEL.md](VERCEL.md) covers the root multi-service Vercel project with web, API, and a private collector daemon. `render.yaml`, `compose.yaml`, `Dockerfile`, and `apps/web/vercel.json` are included. Hosting accounts and paid resources are not provisioned by the project.
+See [DEPLOYMENT.md](DEPLOYMENT.md) for Docker Compose, Render/Railway, Vercel, migrations, monitoring, and recovery. [VERCEL.md](VERCEL.md) covers the multi-service Vercel project configured in `apps/vercel.json` with web, API, and a private collector daemon. `render.yaml`, `compose.yaml`, `Dockerfile`, and `apps/web/vercel.json` are included. Hosting accounts and paid resources are not provisioned by the project.
 
 For a local production smoke test after building, set `SERVE_WEB=true` and `WEB_ORIGIN=http://localhost:4000`, then run `npm run start:api` and `npm run start:worker` in separate terminals. Open port 4000. The database remains a separate service.
 

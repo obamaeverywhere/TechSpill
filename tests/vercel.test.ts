@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
+import { existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { resolve, relative } from "node:path";
 import { createApp } from "../apps/api/src/app";
-import config from "../vercel.json";
+import config from "../apps/vercel.json";
 import vercelApp from "../apps/api/app";
 
 afterEach(() => vi.unstubAllEnvs());
@@ -16,6 +19,37 @@ describe("Vercel service boundaries", () => {
     expect(serviceFor("/saved")).toBe("web");
     expect(Object.keys(config.services)).toEqual(["web", "api"]);
     expect(config.daemons.worker.entrypoint).toBe("Dockerfile.worker");
+  });
+  it("resolves service sources and the worker build context from apps without escaping the repository", () => {
+    const repository = fileURLToPath(new URL("../", import.meta.url));
+    const project = resolve(repository, "apps");
+    expect(existsSync(resolve(repository, "vercel.json"))).toBe(false);
+    expect(config.services.web.root).toBe("web");
+    expect(config.services.api.root).toBe("api");
+    expect(
+      existsSync(resolve(project, config.services.web.root, "index.html")),
+    ).toBe(true);
+    expect(
+      existsSync(
+        resolve(
+          project,
+          config.services.api.root,
+          config.services.api.entrypoint,
+        ),
+      ),
+    ).toBe(true);
+    const context = resolve(project, config.daemons.worker.root);
+    expect(relative(repository, context)).toBe("");
+    expect(existsSync(resolve(context, config.daemons.worker.entrypoint))).toBe(
+      true,
+    );
+    for (const file of [
+      "package-lock.json",
+      "prisma/schema.prisma",
+      "packages/db/package.json",
+      "apps/worker/src/index.ts",
+    ])
+      expect(existsSync(resolve(context, file))).toBe(true);
   });
   it("keeps development modules and static assets out of the SPA fallback", () => {
     const fallback = new RegExp(`^${config.services.web.rewrites[0].source}$`);
