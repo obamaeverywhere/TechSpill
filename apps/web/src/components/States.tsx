@@ -1,7 +1,10 @@
+import { BrandLoader } from "./BrandLoader";
 import { AlertCircle, Bookmark, Radio, SearchX } from "lucide-react";
 export function LoadingState() {
   return (
-    <div className="news-grid" aria-label="Loading news" role="status">
+    <div className="news-loading" aria-label="Loading news" role="status" aria-busy="true">
+      <BrandLoader/>
+      <div className="news-grid" aria-hidden="true">
       {Array.from({ length: 6 }, (_, i) => (
         <div className="skeleton-card" key={i}>
           <div className="skeleton skeleton-image" />
@@ -12,7 +15,7 @@ export function LoadingState() {
           </div>
         </div>
       ))}
-      <span className="sr-only">Loading the latest technology news…</span>
+      </div>
     </div>
   );
 }

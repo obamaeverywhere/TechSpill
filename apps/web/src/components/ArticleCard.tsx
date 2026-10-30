@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { Article } from "@techpulse/shared";
 import { CONTENT_LABELS } from "@techpulse/shared";
 import { usePreferences } from "../hooks/usePreferences";
+import { TechSpillLogo } from "./TechSpillLogo";
 import { Highlight } from "./TextHighlight";
 import { fullDate, relativeTime, bangladeshDate } from "../utils/format";
 export function SourceMark({ name, color }: { name: string; color: string }) {
@@ -52,9 +53,7 @@ export function ArticleImage({
         <div className="fallback-art" aria-hidden="true">
           <span className="orb orb-one" />
           <span className="orb orb-two" />
-          <span className="fallback-monogram">
-            ts<span>.</span>
-          </span>
+          <span className="fallback-brand"><TechSpillLogo/></span>
           <span className="fallback-label">TECHSPILL / NO PUBLISHER IMAGE</span>
           <span className="fallback-publisher">{article.source.name}</span>
         </div>

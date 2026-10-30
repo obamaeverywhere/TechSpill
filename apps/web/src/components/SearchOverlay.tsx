@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Search, X } from "lucide-react";
 import { BD_CATEGORIES, CATEGORIES, CONTENT_LABELS } from "@techpulse/shared";
 import { getBangladeshNews, getNews } from "../services/api";
+import { BrandLoader } from "./BrandLoader";
 import { Highlight } from "./TextHighlight";
 import { relativeTime } from "../utils/format";
 
@@ -181,9 +182,7 @@ export function SearchOverlay({
               </p>
             </div>
           ) : text.trim() !== debounced || results.isPending ? (
-            <p className="search-status" role="status">
-              Finding fresh spills…
-            </p>
+            <div className="search-status" role="status"><BrandLoader compact label="Finding fresh spills…"/></div>
           ) : results.isError ? (
             <div className="search-status" role="alert">
               <p>{results.error.message}</p>

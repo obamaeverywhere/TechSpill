@@ -1,0 +1,18 @@
+/* Available before the application bundle, and reused by the React loading states. */
+.boot-loader { min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; background: #0c0c12; color: #f5f5f7; font-family: Inter, system-ui, sans-serif; }
+html[data-theme="light"] .boot-loader { background: #f7f7f4; color: #111118; }
+.boot-loader .brand-loader { width: min(310px, 80vw); padding: 32px 0; }
+.boot-loader .boot-wordmark { display: block; width: 100%; height: auto; background: #08090d; border-radius: 12px; }
+.brand-loader { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 30px 18px; text-align: center; }
+.brand-loader > p { margin: 0; font-size: 12px; line-height: 1.6; color: inherit; opacity: .8; }
+.spill-loader-dots { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 18px; }
+.spill-loader-dots i { display: block; width: 7px; height: 7px; border-radius: 50%; background: #c8ff58; animation: spill-bounce 1.1s ease-in-out infinite; }
+.spill-loader-dots i:nth-child(2) { background: #8b5cf6; animation-delay: 140ms; }
+.spill-loader-dots i:nth-child(3) { animation-delay: 280ms; }
+html[data-theme="light"] .spill-loader-dots i:not(:nth-child(2)) { background: #385510; }
+.brand-loader-compact { padding: 18px; gap: 12px; }
+.brand-loader-compact .brand-icon { width: 46px; height: 46px; }
+.news-loading > .brand-loader { margin-bottom: 22px; background: var(--surface, #15151e); border: 1px solid var(--border, #30303e); border-radius: 20px; color: var(--muted, #b0b0bf); }
+.news-loading .brand-wordmark { width: 200px; }
+@keyframes spill-bounce { 0%, 70%, 100% { transform: translateY(0); opacity: .5; } 35% { transform: translateY(-5px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .spill-loader-dots i { animation: none; opacity: 1; } }
