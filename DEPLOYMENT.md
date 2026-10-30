@@ -46,15 +46,19 @@ Deploy the Dockerfile as two services. Start the API with `node apps/api/dist/in
 
 If a provider assigns `PORT`, Express respects it. Use a pooled, TLS-protected database connection string as required by the database provider. Keep worker concurrency conservative to avoid exceeding small database connection limits. Multiple worker instances are supported for failover through the database lease, not for parallel collection of the same schedule.
 
-## Optional Vercel frontend
+## Vercel Services (one project)
 
-Vercel hosts only `apps/web`; the Express API and scheduled worker still need persistent services elsewhere.
+The root `vercel.json` configures the Vite `web` service, Express `api` service, and a private `worker` daemon. See [VERCEL.md](VERCEL.md) for the exact topology, same-origin routing, runtime environment, managed database/migration requirements, and local verification. The static frontend does not need a runtime service binding; the browser calls the public `/api` path. The worker accesses PostgreSQL directly.
+
+## Alternative: frontend-only Vercel project
+
+For an intentionally frontend-only project, use `apps/web` as its root and keep the API and worker on another host:
 
 1. Select `apps/web` as the project root and enable access to repository files outside that root for npm workspaces.
 2. The included `vercel.json` builds the web workspace from the repository root, publishes `dist`, and rewrites client routes to `index.html`.
 3. Set `VITE_API_URL=https://your-api-origin.example` before building. It must not include `/api`.
 4. Add the exact deployed frontend origin to the API’s `WEB_ORIGIN`. Preview deployments require their own explicit origin entries if they need API access.
-5. Do not deploy the node-cron worker as a Vercel function. It must keep running while all browser windows are closed.
+5. Do not deploy the node-cron worker as a request function. Run it as the private daemon in the unified configuration, or keep it on the external host for this frontend-only alternative.
 
 ## Migrations and operations
 

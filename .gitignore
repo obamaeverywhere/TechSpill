@@ -6,3 +6,5 @@ dist/
 coverage/
 *.log
 test-results/
+
+.vercel/

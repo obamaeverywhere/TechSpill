@@ -12,7 +12,9 @@ import { bangladeshRouter } from "./routes/bangladesh.js";
 import { listCategories, listSources } from "./services/catalog.js";
 import { publicArticleWhere } from "./services/news.js";
 
-export function createApp() {
+export function createApp({
+  serveWeb = process.env.SERVE_WEB === "true",
+} = {}) {
   const app = express();
   app.disable("x-powered-by");
   if (process.env.TRUST_PROXY_HOPS)
@@ -43,9 +45,23 @@ export function createApp() {
       autoLogging: process.env.NODE_ENV !== "test",
     }),
   );
-  const origins = (process.env.WEB_ORIGIN || "http://localhost:5173")
+  const origins = (
+    process.env.WEB_ORIGIN ||
+    (process.env.VERCEL === "1" ? "" : "http://localhost:5173")
+  )
     .split(",")
-    .map((s) => s.trim());
+    .map((s) => s.trim())
+    .filter(Boolean);
+  // Vercel supplies these hostnames per deployment; never trust arbitrary request hosts.
+  if (process.env.VERCEL === "1") {
+    for (const hostname of [
+      process.env.VERCEL_URL,
+      process.env.VERCEL_BRANCH_URL,
+      process.env.VERCEL_PROJECT_PRODUCTION_URL,
+    ]) {
+      if (hostname) origins.push(`https://${hostname}`);
+    }
+  }
   app.use(
     cors({
       origin: (origin, cb) =>
@@ -158,7 +174,7 @@ export function createApp() {
       .status(404)
       .json({ error: { code: "NOT_FOUND", message: "Endpoint not found" } }),
   );
-  if (process.env.SERVE_WEB === "true") {
+  if (serveWeb) {
     app.use(express.static(resolve("apps/web/dist"), { maxAge: "1h" }));
     app.get("/{*path}", (_req, res) =>
       res.sendFile(resolve("apps/web/dist/index.html")),
